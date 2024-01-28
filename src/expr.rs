@@ -4,13 +4,15 @@ use crate::utils::Result;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Expr {
     Nop,
+    DB(u8),
 }
 
 impl Expr {
     pub fn to_instructions(&self) -> Result<Vec<Instruction>> {
         use Expr::*;
         match self {
-           Nop => Ok(vec![Instruction::nop()]) 
+           Nop => Ok(vec![Instruction::nop()]),
+           DB(value) => Ok(vec![Instruction::db(*value)]),
         }
     }
 }
