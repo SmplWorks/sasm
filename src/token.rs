@@ -14,6 +14,8 @@ pub enum Token {
     DB,
     DW,
     Mov,
+    Add,
+    Sub,
 }
 
 pub struct Tokens<'a> {
@@ -106,6 +108,8 @@ fn get_identifier(c : char, code : &mut Code) -> Token {
         "db" => Token::DB,
         "dw" => Token::DW,
         "mov" => Token::Mov,
+        "add" => Token::Add,
+        "sub" => Token::Sub,
 
         _ => todo!("{ident}"),
     }

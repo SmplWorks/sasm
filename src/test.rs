@@ -30,3 +30,9 @@ case!(movr2r_word, "mov r4, r5", Ok(vec![Instruction::movr2r(Register::r4(), Reg
 
 case!(movm2r, "mov [r6], rb7", Ok(vec![Instruction::movm2r(Register::r6(), Register::rb7()).unwrap()]));
 case!(movr2m, "mov rb8, [r9]", Ok(vec![Instruction::movr2m(Register::rb8(), Register::r9()).unwrap()]));
+
+case!(add_byte, "add rb10, rb11", Ok(vec![Instruction::add(Register::rb10(), Register::rb11()).unwrap()]));
+case!(add_word, "add r0, r1", Ok(vec![Instruction::add(Register::r0(), Register::r1()).unwrap()]));
+
+case!(sub_byte, "sub rb0, rb1", Ok(vec![Instruction::sub(Register::rb0(), Register::rb1()).unwrap()]));
+case!(sub_word, "sub r0, r1", Ok(vec![Instruction::sub(Register::r0(), Register::r1()).unwrap()]));

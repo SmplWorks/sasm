@@ -37,6 +37,25 @@ fn parse_dw(toks : &mut Tokens) -> Result<Expr> {
     Ok(Expr::DB(values.into_iter().flat_map(|value| [value as u8, (value >> 8) as u8]).collect()))
 }
 
+fn parse_comma(toks : &mut Tokens, ctx : &'static str) -> Result<(Token, Token)> {
+    let Some(t1) = toks.next() else { return Err(Error::EOF("value", ctx)) };
+
+    let Some(t2) = toks.next() else { return Err(Error::EOF("comma", ctx)) };
+    if t2 != Token::Comma {
+        return Err(Error::UnexpectedToken(t2, "mov"))
+    }
+
+    let Some(t3) = toks.next() else { return Err(Error::EOF("value", ctx)) };
+    Ok((t1, t3))
+}
+
+fn parse_regs(toks : &mut Tokens, ctx : &'static str) -> Result<(Register, Register)> {
+    let (t1, t2) = parse_comma(toks, "add")?;
+    let Token::Register(r1) = t1 else { return Err(Error::UnexpectedToken(t1, ctx)) };
+    let Token::Register(r2) = t2 else { return Err(Error::UnexpectedToken(t2, ctx)) };
+    Ok((r1, r2))
+}
+
 fn parse_movc2r(value : i64, t2 : Token) -> Result<Expr> {
     match t2 {
         Token::Register(r2) => Ok(Expr::Instruction(Instruction::movc2r(Value::new(r2.width(), value as u16), r2)?)),
@@ -63,14 +82,7 @@ fn parse_movm2x(r1 : Register, t2 : Token) -> Result<Expr> {
 }
 
 fn parse_mov(toks : &mut Tokens) -> Result<Expr> {
-    let Some(t1) = toks.next() else { return Err(Error::EOF("value", "mov")) };
-
-    let Some(t2) = toks.next() else { return Err(Error::EOF("comma", "mov")) };
-    if t2 != Token::Comma {
-        return Err(Error::UnexpectedToken(t2, "mov"))
-    }
-
-    let Some(t2) = toks.next() else { return Err(Error::EOF("value", "mov")) };
+    let (t1, t2) = parse_comma(toks, "mov")?;
     match t1 {
         Token::Number(value) => parse_movc2r(value, t2),
         Token::Register(r1) => parse_movr2x(r1, t2),
@@ -78,6 +90,17 @@ fn parse_mov(toks : &mut Tokens) -> Result<Expr> {
 
         _ => Err(Error::UnexpectedToken(t1, "mov")),
     }
+}
+
+
+fn parse_add(toks : &mut Tokens) -> Result<Expr> {
+    let (r1, r2) = parse_regs(toks, "add")?;
+    Ok(Expr::Instruction(Instruction::add(r1, r2)?))
+}
+
+fn parse_sub(toks : &mut Tokens) -> Result<Expr> {
+    let (r1, r2) = parse_regs(toks, "add")?;
+    Ok(Expr::Instruction(Instruction::sub(r1, r2)?))
 }
 
 fn parse_toks(toks : &mut Tokens) -> Result<Option<Expr>> {
@@ -92,6 +115,8 @@ fn parse_toks(toks : &mut Tokens) -> Result<Option<Expr>> {
         DB => parse_db(toks)?,
         DW => parse_dw(toks)?,
         Mov => parse_mov(toks)?,
+        Add => parse_add(toks)?,
+        Sub => parse_sub(toks)?,
     }))
 }
 
