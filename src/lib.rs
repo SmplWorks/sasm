@@ -1,14 +1,14 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+mod parser;
+pub use parser::parse;
+
+mod expr;
+pub use expr::Expr;
+
+pub mod utils;
 
 #[cfg(test)]
-mod tests {
-    use super::*;
+mod test;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+pub fn compile(code : &str) -> utils::Result<Vec<u8>> {
+    Ok(parse(code)?.into_iter().flat_map(|inst| inst.compile()).collect())
 }
