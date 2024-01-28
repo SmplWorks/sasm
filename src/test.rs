@@ -18,4 +18,5 @@ case!(nop_comment, "nop // This is a comment", Ok(vec![Instruction::nop()]));
 case!(nop, "nop", Ok(vec![Instruction::nop()]));
 
 case!(db, "db 0xF3", Ok(vec![Instruction::db(0xF3)]));
+case!(db_multi, "db 0xF3, 0x37", Ok(vec![Instruction::db(0xF3), Instruction::db(0x37)]));
 case!(db_err, "db 0xFFFF", Err(Error::NumberTooLarge(0xFFFF, 8)));

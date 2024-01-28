@@ -1,10 +1,10 @@
 use smpl_core_common::Instruction;
 use crate::utils::Result;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expr {
     Nop,
-    DB(u8),
+    DB(Vec<u8>),
 }
 
 impl Expr {
@@ -12,7 +12,7 @@ impl Expr {
         use Expr::*;
         match self {
            Nop => Ok(vec![Instruction::nop()]),
-           DB(value) => Ok(vec![Instruction::db(*value)]),
+           DB(values) => Ok(values.iter().map(|value| Instruction::db(*value)).collect()),
         }
     }
 }

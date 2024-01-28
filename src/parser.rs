@@ -2,13 +2,25 @@ use smpl_core_common::Instruction;
 use crate::{Expr, Token, Tokens, tokenize, utils::{Error, Result}};
 
 fn parse_db(toks : &mut Tokens) -> Result<Expr> {
-    let Some(t) = toks.next() else { return Err(Error::EOF("a number", "db")) };
-    match t {
-        Token::Number(value) =>
-            Ok(Expr::DB(value.try_into().map_err(|_| Error::NumberTooLarge(value, 8))?)),
+    let mut values = Vec::new();
 
-        _ => Err(Error::UnexpectedToken(t, "db")),
+    loop {
+        let Some(t) = toks.next() else { return Err(Error::EOF("a number", "db")) };
+        match t {
+            Token::Number(value) =>
+                values.push(value.try_into().map_err(|_| Error::NumberTooLarge(value, 8))?),
+
+            _ => return Err(Error::UnexpectedToken(t, "db")),
+        };
+
+        let Some(t) = toks.next() else { break };
+        match t {
+            Token::Comma => (),
+            _ => return Err(Error::UnexpectedToken(t, "db")),
+        }
     }
+
+    Ok(Expr::DB(values))
 }
 
 fn parse_toks(toks : &mut Tokens) -> Result<Option<Expr>> {
@@ -16,7 +28,8 @@ fn parse_toks(toks : &mut Tokens) -> Result<Option<Expr>> {
 
     use Token::*;
     Ok(Some(match t {
-        Number(_) => todo!(),
+        Number(_) | Comma =>
+            return Err(Error::UnexpectedToken(t, "parse_toks")),
 
         Nop => Expr::Nop,
         DB => parse_db(toks)?,

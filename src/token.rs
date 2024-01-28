@@ -4,6 +4,7 @@ type Code<'a> = std::iter::Peekable<std::str::Chars<'a>>;
 pub enum Token {
     // Misc
     Number(i64),
+    Comma,
 
     // Instructions
     Nop,
@@ -110,7 +111,10 @@ fn get_token(code : &mut Code) -> Option<Token> {
     } else if accept_number(c) {
         Some(get_number(c, code))
     } else {
-        todo!("'{}'", c as u8)
+        match c {
+            ',' => Some(Token::Comma),
+            _ => todo!("'{}'", c as u8),
+        }
     }
 }
 
