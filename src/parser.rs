@@ -1,47 +1,39 @@
 use smpl_core_common::Instruction;
 use crate::{Expr, Token, Tokens, tokenize, utils::{Error, Result}};
 
-fn parse_db(toks : &mut Tokens) -> Result<Expr> {
+fn parse_db_values(toks : &mut Tokens, ctx : &'static str) -> Result<Vec<i64>> {
     let mut values = Vec::new();
 
     loop {
-        let Some(t) = toks.next() else { return Err(Error::EOF("a number", "db")) };
+        let Some(t) = toks.next() else { return Err(Error::EOF("a number", ctx)) };
         match t {
-            Token::Number(value) =>
-                values.push(value.try_into().map_err(|_| Error::NumberTooLarge(value, "byte"))?),
-
-            _ => return Err(Error::UnexpectedToken(t, "db")),
+            Token::Number(value) => values.push(value),
+            _ => return Err(Error::UnexpectedToken(t, ctx)),
         };
 
         let Some(t) = toks.next() else { break };
         match t {
             Token::Comma => (),
-            _ => return Err(Error::UnexpectedToken(t, "db")),
+            _ => return Err(Error::UnexpectedToken(t, ctx)),
         }
     }
 
+    Ok(values)
+}
+
+fn parse_db(toks : &mut Tokens) -> Result<Expr> {
+    let mut values : Vec<u8> = Vec::new();
+    for value in parse_db_values(toks, "db")? {
+        values.push(value.try_into().map_err(|_| Error::NumberTooLarge(value, "byte"))?);
+    }
     Ok(Expr::DB(values))
 }
 
 fn parse_dw(toks : &mut Tokens) -> Result<Expr> {
     let mut values : Vec<u16> = Vec::new();
-
-    loop {
-        let Some(t) = toks.next() else { return Err(Error::EOF("a number", "dw")) };
-        match t {
-            Token::Number(value) =>
-                values.push(value.try_into().map_err(|_| Error::NumberTooLarge(value, "word"))?),
-
-            _ => return Err(Error::UnexpectedToken(t, "dw")),
-        };
-
-        let Some(t) = toks.next() else { break };
-        match t {
-            Token::Comma => (),
-            _ => return Err(Error::UnexpectedToken(t, "dw")),
-        }
+    for value in parse_db_values(toks, "db")? {
+        values.push(value.try_into().map_err(|_| Error::NumberTooLarge(value, "byte"))?);
     }
-
     Ok(Expr::DB(values.into_iter().flat_map(|value| [value as u8, (value >> 8) as u8]).collect()))
 }
 
