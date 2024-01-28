@@ -19,6 +19,6 @@ mov [r3], rb4
 
 // Infinite loop
 mov -2, r5
-//jmp r5
+jmp r5
 
 dw 0x600D, 0xF337, 0x600D, 0xB007

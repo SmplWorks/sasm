@@ -102,6 +102,12 @@ fn parse_sub(toks : &mut Tokens) -> Result<Expr> {
     Ok(Expr::Instruction(Instruction::sub(r1, r2)?))
 }
 
+fn parse_jmp(toks : &mut Tokens) -> Result<Expr> {
+    let Some(t) = toks.next() else { return Err(Error::EOF("value", "jmp")) };
+    let Token::Register(reg) = t else { return Err(Error::UnexpectedToken(t, "jmp")) };
+    Ok(Expr::Instruction(Instruction::jmp(reg).unwrap()))
+}
+
 fn parse_toks(t : Token, toks : &mut Tokens) -> Result<Expr> {
     use Token::*;
     Ok(match t {
@@ -114,6 +120,7 @@ fn parse_toks(t : Token, toks : &mut Tokens) -> Result<Expr> {
         Mov => parse_mov(toks)?,
         Add => parse_add(toks)?,
         Sub => parse_sub(toks)?,
+        Jmp => parse_jmp(toks)?,
     })
 }
 

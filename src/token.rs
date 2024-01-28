@@ -16,6 +16,7 @@ pub enum Token {
     Mov,
     Add,
     Sub,
+    Jmp,
 }
 
 pub struct Tokens<'a> {
@@ -128,6 +129,7 @@ fn get_identifier(c : char, code : &mut Code) -> Token {
         "mov" => Token::Mov,
         "add" => Token::Add,
         "sub" => Token::Sub,
+        "jmp" => Token::Jmp,
 
         _ => todo!("{ident}"),
     }

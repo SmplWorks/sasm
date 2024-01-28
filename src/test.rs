@@ -36,3 +36,5 @@ case!(add_word, "add r0, r1", Ok(vec![Instruction::add(Register::r0(), Register:
 
 case!(sub_byte, "sub rb0, rb1", Ok(vec![Instruction::sub(Register::rb0(), Register::rb1()).unwrap()]));
 case!(sub_word, "sub r0, r1", Ok(vec![Instruction::sub(Register::r0(), Register::r1()).unwrap()]));
+
+case!(jmp, "jmp r0", Ok(vec![Instruction::jmp(Register::r0()).unwrap()]));
