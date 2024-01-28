@@ -51,18 +51,36 @@ fn skip_whitespace(code : &mut Code) -> Option<char> {
     collect_while(code, |c| c.is_whitespace());
     let mut c = code.next();
     if accept_comment(c, code.peek()) {
-        skip_comment(code);
+        if accept_multi_comment(c.unwrap(), code.next().unwrap()) {
+            skip_multi_comment(code);
+        } else {
+            skip_comment(code);
+        }
         c = skip_whitespace(code);
     }
     c
 }
 
 fn accept_comment(c : Option<char>, next : Option<&char>) -> bool {
-    c.is_some_and(|c| next.is_some_and(|&next| c == '/' && next == '/'))
+    c.is_some_and(|c| next.is_some_and(|&next| c == '/' && (next == '/' || next == '*')))
 }
 
 fn skip_comment(code : &mut Code) {
     collect_until(code, |&c| c == '\r' || c == '\n'); 
+}
+
+fn accept_multi_comment(c : char, next : char) -> bool {
+    c == '/' && next == '*'
+}
+
+fn skip_multi_comment(code : &mut Code) {
+    loop {
+        collect_until(code, |&c| c == '*'); 
+        code.next();
+        if '/' == code.next().expect("Reached end of file with an open multi-line comment") {
+            break
+        }
+    }
 }
 
 fn accept_identifier(c : char) -> bool {

@@ -121,12 +121,8 @@ fn parse_to_exprs(code : &str) -> Result<Vec<Expr>> {
     let mut res = Vec::new();
 
     let mut toks = tokenize(code);
-    loop {
-        if let Some(t) = toks.next() {
-            res.push(parse_toks(t, &mut toks)?)
-        } else {
-            break
-        }
+    while let Some(t) = toks.next() {
+        res.push(parse_toks(t, &mut toks)?)
     }
 
     Ok(res)

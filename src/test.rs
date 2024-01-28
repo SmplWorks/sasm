@@ -12,7 +12,7 @@ macro_rules! case {
 
 case!(empty, "", Ok(vec![]));
 case!(comment, "// This is a comment", Ok(vec![]));
-//case!(multi_comment, "/* This is a\n * multiline\n * comment\n */", Ok(vec![]));
+case!(multi_comment, "/* This is a\n * multiline\n * comment\n */", Ok(vec![]));
 case!(nop_comment, "nop // This is a comment", Ok(vec![Instruction::nop()]));
 
 case!(nop, "nop", Ok(vec![Instruction::nop()]));
