@@ -92,7 +92,6 @@ fn parse_mov(toks : &mut Tokens) -> Result<Expr> {
     }
 }
 
-
 fn parse_add(toks : &mut Tokens) -> Result<Expr> {
     let (r1, r2) = parse_regs(toks, "add")?;
     Ok(Expr::Instruction(Instruction::add(r1, r2)?))
@@ -103,11 +102,9 @@ fn parse_sub(toks : &mut Tokens) -> Result<Expr> {
     Ok(Expr::Instruction(Instruction::sub(r1, r2)?))
 }
 
-fn parse_toks(toks : &mut Tokens) -> Result<Option<Expr>> {
-    let Some(t) = toks.next() else { return Ok(None) };
-
+fn parse_toks(t : Token, toks : &mut Tokens) -> Result<Expr> {
     use Token::*;
-    Ok(Some(match t {
+    Ok(match t {
         Register(_) | Pointer(_) | Number(_) | Comma =>
             return Err(Error::UnexpectedToken(t, "parse_toks")),
 
@@ -117,20 +114,21 @@ fn parse_toks(toks : &mut Tokens) -> Result<Option<Expr>> {
         Mov => parse_mov(toks)?,
         Add => parse_add(toks)?,
         Sub => parse_sub(toks)?,
-    }))
-}
-
-fn parse_line(code : &str) -> Result<Option<Expr>> {
-    parse_toks(&mut tokenize(code))
+    })
 }
 
 fn parse_to_exprs(code : &str) -> Result<Vec<Expr>> {
     let mut res = Vec::new();
-    for line in code.lines() {
-        if let Some(expr) = parse_line(line)? {
-            res.push(expr);
+
+    let mut toks = tokenize(code);
+    loop {
+        if let Some(t) = toks.next() {
+            res.push(parse_toks(t, &mut toks)?)
+        } else {
+            break
         }
     }
+
     Ok(res)
 }
 
