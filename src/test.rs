@@ -27,3 +27,6 @@ case!(movc2r_word, "mov 0xF337, r1", Ok(vec![Instruction::movc2r(Value::word(0xF
 
 case!(movr2r_byte, "mov rb2, rb3", Ok(vec![Instruction::movr2r(Register::rb2(), Register::rb3()).unwrap()]));
 case!(movr2r_word, "mov r4, r5", Ok(vec![Instruction::movr2r(Register::r4(), Register::r5()).unwrap()]));
+
+case!(movm2r, "mov [r6], rb7", Ok(vec![Instruction::movm2r(Register::r6(), Register::rb7()).unwrap()]));
+case!(movr2m, "mov rb8, [r9]", Ok(vec![Instruction::movr2m(Register::rb8(), Register::r9()).unwrap()]));

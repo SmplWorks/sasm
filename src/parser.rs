@@ -48,6 +48,15 @@ fn parse_movc2r(value : i64, t2 : Token) -> Result<Expr> {
 fn parse_movr2x(r1 : Register, t2 : Token) -> Result<Expr> {
     match t2 {
         Token::Register(r2) => Ok(Expr::Instruction(Instruction::movr2r(r1, r2)?)),
+        Token::Pointer(r2) => Ok(Expr::Instruction(Instruction::movr2m(r1, r2)?)),
+
+        _ => Err(Error::UnexpectedToken(t2, "mov")),
+    }
+}
+
+fn parse_movm2x(r1 : Register, t2 : Token) -> Result<Expr> {
+    match t2 {
+        Token::Register(r2) => Ok(Expr::Instruction(Instruction::movm2r(r1, r2)?)),
 
         _ => Err(Error::UnexpectedToken(t2, "mov")),
     }
@@ -65,6 +74,7 @@ fn parse_mov(toks : &mut Tokens) -> Result<Expr> {
     match t1 {
         Token::Number(value) => parse_movc2r(value, t2),
         Token::Register(r1) => parse_movr2x(r1, t2),
+        Token::Pointer(r1) => parse_movm2x(r1, t2),
 
         _ => Err(Error::UnexpectedToken(t1, "mov")),
     }
@@ -75,7 +85,7 @@ fn parse_toks(toks : &mut Tokens) -> Result<Option<Expr>> {
 
     use Token::*;
     Ok(Some(match t {
-        Register(_) | Number(_) | Comma =>
+        Register(_) | Pointer(_) | Number(_) | Comma =>
             return Err(Error::UnexpectedToken(t, "parse_toks")),
 
         Nop => Expr::Instruction(Instruction::Nop),

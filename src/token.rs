@@ -5,6 +5,7 @@ type Code<'a> = std::iter::Peekable<std::str::Chars<'a>>;
 pub enum Token {
     // Misc
     Register(Register),
+    Pointer(Register),
     Number(i64),
     Comma,
 
@@ -140,6 +141,18 @@ fn get_number(c : char, code : &mut Code) -> Token {
     Token::Number(i64::from_str_radix(&s, base).unwrap())
 }
 
+fn accept_pointer(code : &mut Code) -> Token {
+    // TODO: Correctly parse pointers
+    let t = get_identifier(code.next().unwrap(), code);
+    let Token::Register(reg) = t else {
+        panic!("{}", crate::utils::Error::UnexpectedToken(t, "accept_pointer"))
+    };
+    if code.next().unwrap() != ']' {
+        todo!()
+    }
+    Token::Pointer(reg)
+}
+
 fn get_token(code : &mut Code) -> Option<Token> {
     let c = skip_whitespace(code)?;
     if accept_identifier(c) {
@@ -149,6 +162,7 @@ fn get_token(code : &mut Code) -> Option<Token> {
     } else {
         match c {
             ',' => Some(Token::Comma),
+            '[' => Some(accept_pointer(code)),
             _ => todo!("'{}'", c as u8),
         }
     }
