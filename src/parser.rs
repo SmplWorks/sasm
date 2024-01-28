@@ -1,4 +1,4 @@
-use smpl_core_common::Instruction;
+use smpl_core_common::{Instruction, Value, Register};
 use crate::{Expr, Token, Tokens, tokenize, utils::{Error, Result}};
 
 fn parse_db_values(toks : &mut Tokens, ctx : &'static str) -> Result<Vec<i64>> {
@@ -37,17 +37,51 @@ fn parse_dw(toks : &mut Tokens) -> Result<Expr> {
     Ok(Expr::DB(values.into_iter().flat_map(|value| [value as u8, (value >> 8) as u8]).collect()))
 }
 
+fn parse_movc2r(value : i64, t2 : Token) -> Result<Expr> {
+    match t2 {
+        Token::Register(r2) => Ok(Expr::Instruction(Instruction::movc2r(Value::new(r2.width(), value as u16), r2)?)),
+
+        _ => Err(Error::UnexpectedToken(t2, "mov")),
+    }
+}
+
+fn parse_movr2x(r1 : Register, t2 : Token) -> Result<Expr> {
+    match t2 {
+        Token::Register(r2) => Ok(Expr::Instruction(Instruction::movr2r(r1, r2)?)),
+
+        _ => Err(Error::UnexpectedToken(t2, "mov")),
+    }
+}
+
+fn parse_mov(toks : &mut Tokens) -> Result<Expr> {
+    let Some(t1) = toks.next() else { return Err(Error::EOF("value", "mov")) };
+
+    let Some(t2) = toks.next() else { return Err(Error::EOF("comma", "mov")) };
+    if t2 != Token::Comma {
+        return Err(Error::UnexpectedToken(t2, "mov"))
+    }
+
+    let Some(t2) = toks.next() else { return Err(Error::EOF("value", "mov")) };
+    match t1 {
+        Token::Number(value) => parse_movc2r(value, t2),
+        Token::Register(r1) => parse_movr2x(r1, t2),
+
+        _ => Err(Error::UnexpectedToken(t1, "mov")),
+    }
+}
+
 fn parse_toks(toks : &mut Tokens) -> Result<Option<Expr>> {
     let Some(t) = toks.next() else { return Ok(None) };
 
     use Token::*;
     Ok(Some(match t {
-        Number(_) | Comma =>
+        Register(_) | Number(_) | Comma =>
             return Err(Error::UnexpectedToken(t, "parse_toks")),
 
-        Nop => Expr::Nop,
+        Nop => Expr::Instruction(Instruction::Nop),
         DB => parse_db(toks)?,
         DW => parse_dw(toks)?,
+        Mov => parse_mov(toks)?,
     }))
 }
 

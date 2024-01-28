@@ -1,8 +1,10 @@
+use smpl_core_common::Register;
 type Code<'a> = std::iter::Peekable<std::str::Chars<'a>>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Token {
     // Misc
+    Register(Register),
     Number(i64),
     Comma,
 
@@ -10,6 +12,7 @@ pub enum Token {
     Nop,
     DB,
     DW,
+    Mov,
 }
 
 pub struct Tokens<'a> {
@@ -67,10 +70,41 @@ fn get_identifier(c : char, code : &mut Code) -> Token {
     let ident = c.to_string() + &collect_while(code, |c| c.is_alphanumeric() || c == &'_');
 
     match &*ident {
+        // Registers
+        "rinfo" => Token::Register(Register::RINFO),
+        "rip" => Token::Register(Register::RIP),
+        "rint" => Token::Register(Register::RINT),
+        "flags" => Token::Register(Register::Flags),
+        "r0" => Token::Register(Register::r0()),
+        "rb0" => Token::Register(Register::rb0()),
+        "r1" => Token::Register(Register::r1()),
+        "rb1" => Token::Register(Register::rb1()),
+        "r2" => Token::Register(Register::r2()),
+        "rb2" => Token::Register(Register::rb2()),
+        "r3" => Token::Register(Register::r3()),
+        "rb3" => Token::Register(Register::rb3()),
+        "r4" => Token::Register(Register::r4()),
+        "rb4" => Token::Register(Register::rb4()),
+        "r5" => Token::Register(Register::r5()),
+        "rb5" => Token::Register(Register::rb5()),
+        "r6" => Token::Register(Register::r6()),
+        "rb6" => Token::Register(Register::rb6()),
+        "r7" => Token::Register(Register::r7()),
+        "rb7" => Token::Register(Register::rb7()),
+        "r8" => Token::Register(Register::r8()),
+        "rb8" => Token::Register(Register::rb8()),
+        "r9" => Token::Register(Register::r9()),
+        "rb9" => Token::Register(Register::rb9()),
+        "r10" => Token::Register(Register::r10()),
+        "rb10" => Token::Register(Register::rb10()),
+        "r11" => Token::Register(Register::r11()),
+        "rb11" => Token::Register(Register::rb11()),
+
         // Instructions
         "nop" => Token::Nop,
         "db" => Token::DB,
         "dw" => Token::DW,
+        "mov" => Token::Mov,
 
         _ => todo!("{ident}"),
     }
