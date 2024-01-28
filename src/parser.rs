@@ -1,11 +1,20 @@
 use smpl_core_common::Instruction;
-use crate::{Expr, utils::Result};
+use crate::{Expr, Token, Tokens, tokenize, utils::Result};
 
-pub fn parse_line(_code : &str) -> Result<Option<Expr>> {
-    Ok(None)
+fn parse_toks(toks : &mut Tokens) -> Result<Option<Expr>> {
+    let Some(t) = toks.next() else { return Ok(None) };
+
+    use Token::*;
+    match t {
+        Nop => Ok(Some(Expr::Nop)),
+    }
 }
 
-pub fn parse_exprs(code : &str) -> Result<Vec<Expr>> {
+fn parse_line(code : &str) -> Result<Option<Expr>> {
+    parse_toks(&mut tokenize(code))
+}
+
+fn parse_to_exprs(code : &str) -> Result<Vec<Expr>> {
     let mut res = Vec::new();
     for line in code.lines() {
         if let Some(expr) = parse_line(line)? {
@@ -17,8 +26,8 @@ pub fn parse_exprs(code : &str) -> Result<Vec<Expr>> {
 
 pub fn parse(code : &str) -> Result<Vec<Instruction>> {
     let mut res = Vec::new();
-    for expr in parse_exprs(code)? {
-        res.push(expr.to_instruction()?);
+    for expr in parse_to_exprs(code)? {
+        res.append(&mut expr.to_instructions()?);
     }
     Ok(res)
 }

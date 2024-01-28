@@ -1,6 +1,9 @@
 mod parser;
 pub use parser::parse;
 
+mod token;
+pub use token::{Token, Tokens, tokenize};
+
 mod expr;
 pub use expr::Expr;
 
