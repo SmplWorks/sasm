@@ -8,7 +8,7 @@ pub enum Error {
     #[error("unexpected token {0:?} for {1}")]
     UnexpectedToken(Token, &'static str),
 
-    #[error("number too large to fit in {1}-bits ({0})")]
-    NumberTooLarge(i64, u8),
+    #[error("number too large to fit in a {1} ({0})")]
+    NumberTooLarge(i64, &'static str),
 }
 pub type Result<T> = std::result::Result<T, Error>;

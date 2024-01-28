@@ -9,6 +9,7 @@ pub enum Token {
     // Instructions
     Nop,
     DB,
+    DW,
 }
 
 pub struct Tokens<'a> {
@@ -69,6 +70,7 @@ fn get_identifier(c : char, code : &mut Code) -> Token {
         // Instructions
         "nop" => Token::Nop,
         "db" => Token::DB,
+        "dw" => Token::DW,
 
         _ => todo!("{ident}"),
     }

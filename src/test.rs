@@ -19,4 +19,5 @@ case!(nop, "nop", Ok(vec![Instruction::nop()]));
 
 case!(db, "db 0xF3", Ok(vec![Instruction::db(0xF3)]));
 case!(db_multi, "db 0xF3, 0x37", Ok(vec![Instruction::db(0xF3), Instruction::db(0x37)]));
-case!(db_err, "db 0xFFFF", Err(Error::NumberTooLarge(0xFFFF, 8)));
+case!(db_err, "db 0xFFFF", Err(Error::NumberTooLarge(0xFFFF, "byte")));
+case!(dw, "dw 0xF337", Ok(vec![Instruction::db(0x37), Instruction::db(0xF3)]));

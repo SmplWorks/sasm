@@ -8,7 +8,7 @@ fn parse_db(toks : &mut Tokens) -> Result<Expr> {
         let Some(t) = toks.next() else { return Err(Error::EOF("a number", "db")) };
         match t {
             Token::Number(value) =>
-                values.push(value.try_into().map_err(|_| Error::NumberTooLarge(value, 8))?),
+                values.push(value.try_into().map_err(|_| Error::NumberTooLarge(value, "byte"))?),
 
             _ => return Err(Error::UnexpectedToken(t, "db")),
         };
@@ -23,6 +23,28 @@ fn parse_db(toks : &mut Tokens) -> Result<Expr> {
     Ok(Expr::DB(values))
 }
 
+fn parse_dw(toks : &mut Tokens) -> Result<Expr> {
+    let mut values : Vec<u16> = Vec::new();
+
+    loop {
+        let Some(t) = toks.next() else { return Err(Error::EOF("a number", "dw")) };
+        match t {
+            Token::Number(value) =>
+                values.push(value.try_into().map_err(|_| Error::NumberTooLarge(value, "word"))?),
+
+            _ => return Err(Error::UnexpectedToken(t, "dw")),
+        };
+
+        let Some(t) = toks.next() else { break };
+        match t {
+            Token::Comma => (),
+            _ => return Err(Error::UnexpectedToken(t, "dw")),
+        }
+    }
+
+    Ok(Expr::DB(values.into_iter().flat_map(|value| [value as u8, (value >> 8) as u8]).collect()))
+}
+
 fn parse_toks(toks : &mut Tokens) -> Result<Option<Expr>> {
     let Some(t) = toks.next() else { return Ok(None) };
 
@@ -33,6 +55,7 @@ fn parse_toks(toks : &mut Tokens) -> Result<Option<Expr>> {
 
         Nop => Expr::Nop,
         DB => parse_db(toks)?,
+        DW => parse_dw(toks)?,
     }))
 }
 
