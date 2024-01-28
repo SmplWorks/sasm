@@ -1,6 +1,6 @@
 use crate::Token;
 
-#[derive(thiserror::Error, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(thiserror::Error, Debug, Clone, PartialEq, Eq)]
 pub enum Error {
     #[error("reached end of file while expecting {0} for {1}")]
     EOF(&'static str, &'static str),
@@ -13,6 +13,9 @@ pub enum Error {
 
     #[error("{0}")]
     CoreCommon(smpl_core_common::utils::Error),
+
+    #[error("{0}")]
+    External(String),
 }
 pub type Result<T> = std::result::Result<T, Error>;
 
