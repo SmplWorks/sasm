@@ -1,9 +1,10 @@
 use smpl_core_common::Register;
 type Code<'a> = std::iter::Peekable<std::str::Chars<'a>>;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Token {
     // Misc
+    IdentifierDef(String),
     Register(Register),
     Pointer(Register),
     Number(i64),
@@ -131,7 +132,13 @@ fn get_identifier(c : char, code : &mut Code) -> Token {
         "sub" => Token::Sub,
         "jmp" => Token::Jmp,
 
-        _ => todo!("{ident}"),
+        _ => match code.peek() {
+            Some(':') => {
+                code.next();
+                Token::IdentifierDef(ident)
+            },
+            _ => todo!("{ident}"),
+        },
     }
 }
 

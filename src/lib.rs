@@ -13,5 +13,6 @@ pub mod utils;
 mod test;
 
 pub fn compile(code : &str) -> utils::Result<Vec<u8>> {
-    Ok(parse(code)?.into_iter().flat_map(|inst| inst.compile()).collect())
+    let (instructions, _) = parse(code)?;
+    Ok(instructions.into_iter().flat_map(|inst| inst.compile()).collect())
 }

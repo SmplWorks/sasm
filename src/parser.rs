@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use smpl_core_common::{Instruction, Value, Register};
 use crate::{Expr, Token, Tokens, tokenize, utils::{Error, Result}};
 
@@ -114,6 +116,8 @@ fn parse_toks(t : Token, toks : &mut Tokens) -> Result<Expr> {
         Register(_) | Pointer(_) | Number(_) | Comma =>
             return Err(Error::UnexpectedToken(t, "parse_toks")),
 
+        IdentifierDef(ident) => Expr::IdentifierDef(ident),
+
         Nop => Expr::Instruction(Instruction::Nop),
         DB => parse_db(toks)?,
         DW => parse_dw(toks)?,
@@ -135,10 +139,21 @@ fn parse_to_exprs(code : &str) -> Result<Vec<Expr>> {
     Ok(res)
 }
 
-pub fn parse(code : &str) -> Result<Vec<Instruction>> {
+pub fn parse(code : &str) -> Result<(Vec<Instruction>, HashMap<String, u16>)> {
+    let exprs = parse_to_exprs(code)?;
+    let mut identifiers = HashMap::new();
+    let mut sum = 0;
+    for expr in exprs.iter() {
+        if let Expr::IdentifierDef(ident) = expr {
+            identifiers.insert(ident.clone(), sum);
+        };
+
+        sum += expr.len();
+    }
+    
     let mut res = Vec::new();
-    for expr in parse_to_exprs(code)? {
+    for expr in exprs.iter() {
         res.append(&mut expr.to_instructions()?);
     }
-    Ok(res)
+    Ok((res, identifiers))
 }
