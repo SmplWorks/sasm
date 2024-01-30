@@ -58,6 +58,14 @@ fn parse_regs(toks : &mut Tokens, ctx : &'static str) -> Result<(Register, Regis
     Ok((r1, r2))
 }
 
+fn parse_movi2r(ident : String, t2 : Token) -> Result<Expr> {
+    match t2 {
+        Token::Register(r2) => Ok(Expr::MovC2R(ident, r2)),
+
+        _ => Err(Error::UnexpectedToken(t2, "mov")),
+    }
+}
+
 fn parse_movc2r(value : i64, t2 : Token) -> Result<Expr> {
     match t2 {
         Token::Register(r2) => Ok(Expr::Instruction(Instruction::movc2r(Value::new(r2.width(), value as u16), r2)?)),
@@ -86,6 +94,7 @@ fn parse_movm2x(r1 : Register, t2 : Token) -> Result<Expr> {
 fn parse_mov(toks : &mut Tokens) -> Result<Expr> {
     let (t1, t2) = parse_comma(toks, "mov")?;
     match t1 {
+        Token::IdentifierRef(ident) => parse_movi2r(ident, t2),
         Token::Number(value) => parse_movc2r(value, t2),
         Token::Register(r1) => parse_movr2x(r1, t2),
         Token::Pointer(r1) => parse_movm2x(r1, t2),
@@ -113,7 +122,7 @@ fn parse_jmp(toks : &mut Tokens) -> Result<Expr> {
 fn parse_toks(t : Token, toks : &mut Tokens) -> Result<Expr> {
     use Token::*;
     Ok(match t {
-        Register(_) | Pointer(_) | Number(_) | Comma =>
+        IdentifierRef(_) | Register(_) | Pointer(_) | Number(_) | Comma =>
             return Err(Error::UnexpectedToken(t, "parse_toks")),
 
         IdentifierDef(ident) => Expr::IdentifierDef(ident),
@@ -153,7 +162,7 @@ pub fn parse(code : &str) -> Result<(Vec<Instruction>, HashMap<String, u16>)> {
     
     let mut res = Vec::new();
     for expr in exprs.iter() {
-        res.append(&mut expr.to_instructions()?);
+        res.append(&mut expr.to_instructions(&identifiers)?);
     }
     Ok((res, identifiers))
 }

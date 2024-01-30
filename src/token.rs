@@ -5,6 +5,7 @@ type Code<'a> = std::iter::Peekable<std::str::Chars<'a>>;
 pub enum Token {
     // Misc
     IdentifierDef(String),
+    IdentifierRef(String),
     Register(Register),
     Pointer(Register),
     Number(i64),
@@ -137,7 +138,7 @@ fn get_identifier(c : char, code : &mut Code) -> Token {
                 code.next();
                 Token::IdentifierDef(ident)
             },
-            _ => todo!("{ident}"),
+            _ => Token::IdentifierRef(ident),
         },
     }
 }
