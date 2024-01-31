@@ -58,9 +58,9 @@ fn parse_regs(toks : &mut Tokens, ctx : &'static str) -> Result<(Register, Regis
     Ok((r1, r2))
 }
 
-fn parse_movi2r(ident : String, t2 : Token) -> Result<Expr> {
+fn parse_movi2r(ident : String, t2 : Token, relative : bool) -> Result<Expr> {
     match t2 {
-        Token::Register(r2) => Ok(Expr::MovC2R(ident, r2)),
+        Token::Register(r2) => Ok(Expr::MovC2R(ident, r2, relative)),
 
         _ => Err(Error::UnexpectedToken(t2, "mov")),
     }
@@ -92,12 +92,17 @@ fn parse_movm2x(r1 : Register, t2 : Token) -> Result<Expr> {
 }
 
 fn parse_mov(toks : &mut Tokens) -> Result<Expr> {
+    let relative = if let Some(Token::Rel) = toks.peek() {
+        toks.next();
+        true
+    } else { false };
+
     let (t1, t2) = parse_comma(toks, "mov")?;
     match t1 {
-        Token::IdentifierRef(ident) => parse_movi2r(ident, t2),
-        Token::Number(value) => parse_movc2r(value, t2),
-        Token::Register(r1) => parse_movr2x(r1, t2),
-        Token::Pointer(r1) => parse_movm2x(r1, t2),
+        Token::IdentifierRef(ident) => parse_movi2r(ident, t2, relative),
+        Token::Number(value) => parse_movc2r(value, t2), // TODO: Accept relative
+        Token::Register(r1) => parse_movr2x(r1, t2), // TODO: Warn if relative
+        Token::Pointer(r1) => parse_movm2x(r1, t2), // TODO: Warn if relataive
 
         _ => Err(Error::UnexpectedToken(t1, "mov")),
     }
@@ -122,9 +127,6 @@ fn parse_jmp(toks : &mut Tokens) -> Result<Expr> {
 fn parse_toks(t : Token, toks : &mut Tokens) -> Result<Expr> {
     use Token::*;
     Ok(match t {
-        IdentifierRef(_) | Register(_) | Pointer(_) | Number(_) | Comma =>
-            return Err(Error::UnexpectedToken(t, "parse_toks")),
-
         IdentifierDef(ident) => Expr::IdentifierDef(ident),
 
         Nop => Expr::Instruction(Instruction::Nop),
@@ -134,6 +136,8 @@ fn parse_toks(t : Token, toks : &mut Tokens) -> Result<Expr> {
         Add => parse_add(toks)?,
         Sub => parse_sub(toks)?,
         Jmp => parse_jmp(toks)?,
+
+        _ => return Err(Error::UnexpectedToken(t, "parse_toks")),
     })
 }
 
@@ -151,18 +155,21 @@ fn parse_to_exprs(code : &str) -> Result<Vec<Expr>> {
 pub fn parse(code : &str) -> Result<(Vec<Instruction>, HashMap<String, u16>)> {
     let exprs = parse_to_exprs(code)?;
     let mut identifiers = HashMap::new();
-    let mut sum = 0;
+    let mut offset = 0;
     for expr in exprs.iter() {
         if let Expr::IdentifierDef(ident) = expr {
-            identifiers.insert(ident.clone(), sum);
+            identifiers.insert(ident.clone(), offset);
         };
 
-        sum += expr.len();
+        offset += expr.len();
     }
     
     let mut res = Vec::new();
+    let mut offset = 0;
     for expr in exprs.iter() {
-        res.append(&mut expr.to_instructions(&identifiers)?);
+        res.append(&mut expr.to_instructions(&identifiers, offset)?);
+
+        offset += expr.len();
     }
     Ok((res, identifiers))
 }

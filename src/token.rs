@@ -19,19 +19,23 @@ pub enum Token {
     Add,
     Sub,
     Jmp,
+
+    // Keywords
+    Rel,
 }
 
-pub struct Tokens<'a> {
+pub struct Tokens_<'a> {
     code : Code<'a>,
 }
 
-impl<'a> Iterator for Tokens<'a> {
+impl<'a> Iterator for Tokens_<'a> {
     type Item = Token;
 
     fn next(&mut self) -> Option<Self::Item> {
         get_token(&mut self.code)
     }
 }
+pub type Tokens<'a> = std::iter::Peekable<Tokens_<'a>>;
 
 fn collect_while(code : &mut Code, predicate : impl Fn(&char) -> bool) -> String {
     let mut s = String::new();
@@ -133,6 +137,9 @@ fn get_identifier(c : char, code : &mut Code) -> Token {
         "sub" => Token::Sub,
         "jmp" => Token::Jmp,
 
+        // Keywords
+        "rel" => Token::Rel,
+
         _ => match code.peek() {
             Some(':') => {
                 code.next();
@@ -201,7 +208,7 @@ fn get_token(code : &mut Code) -> Option<Token> {
 }
 
 pub fn tokenize(code : &str) -> Tokens {
-    Tokens { code: code.chars().peekable() }
+    Tokens_ { code: code.chars().peekable() }.peekable()
 }
 
 #[cfg(test)]
