@@ -51,12 +51,14 @@ fn parse_comma(toks : &mut Tokens, ctx : &'static str) -> Result<(Token, Token)>
     Ok((t1, t3))
 }
 
+/*
 fn parse_regs(toks : &mut Tokens, ctx : &'static str) -> Result<(Register, Register)> {
     let (t1, t2) = parse_comma(toks, "add")?;
     let Token::Register(r1) = t1 else { return Err(Error::UnexpectedToken(t1, ctx)) };
     let Token::Register(r2) = t2 else { return Err(Error::UnexpectedToken(t2, ctx)) };
     Ok((r1, r2))
 }
+*/
 
 fn parse_movi2r(ident : String, t2 : Token, relative : bool) -> Result<Expr> {
     match t2 {
@@ -108,14 +110,56 @@ fn parse_mov(toks : &mut Tokens) -> Result<Expr> {
     }
 }
 
+fn parse_addc2r(value : i64, t2 : Token) -> Result<Expr> {
+    match t2 {
+        Token::Register(r2) => Ok(Expr::Instruction(Instruction::addc2r(Value::new(r2.width(), value as u16), r2)?)),
+
+        _ => Err(Error::UnexpectedToken(t2, "add")),
+    }
+}
+
+fn parse_addr2x(r1 : Register, t2 : Token) -> Result<Expr> {
+    match t2 {
+        Token::Register(r2) => Ok(Expr::Instruction(Instruction::addr2r(r1, r2)?)),
+
+        _ => Err(Error::UnexpectedToken(t2, "add")),
+    }
+}
+
 fn parse_add(toks : &mut Tokens) -> Result<Expr> {
-    let (r1, r2) = parse_regs(toks, "add")?;
-    Ok(Expr::Instruction(Instruction::add(r1, r2)?))
+    let (t1, t2) = parse_comma(toks, "add")?;
+    match t1 {
+        Token::Number(value) => parse_addc2r(value, t2),
+        Token::Register(r1) => parse_addr2x(r1, t2),
+
+        _ => Err(Error::UnexpectedToken(t1, "add")),
+    }
+}
+
+fn parse_subc2r(value : i64, t2 : Token) -> Result<Expr> {
+    match t2 {
+        Token::Register(r2) => Ok(Expr::Instruction(Instruction::subc2r(Value::new(r2.width(), value as u16), r2)?)),
+
+        _ => Err(Error::UnexpectedToken(t2, "sub")),
+    }
+}
+
+fn parse_subr2x(r1 : Register, t2 : Token) -> Result<Expr> {
+    match t2 {
+        Token::Register(r2) => Ok(Expr::Instruction(Instruction::subr2r(r1, r2)?)),
+
+        _ => Err(Error::UnexpectedToken(t2, "sub")),
+    }
 }
 
 fn parse_sub(toks : &mut Tokens) -> Result<Expr> {
-    let (r1, r2) = parse_regs(toks, "add")?;
-    Ok(Expr::Instruction(Instruction::sub(r1, r2)?))
+    let (t1, t2) = parse_comma(toks, "sub")?;
+    match t1 {
+        Token::Number(value) => parse_subc2r(value, t2),
+        Token::Register(r1) => parse_subr2x(r1, t2), 
+
+        _ => Err(Error::UnexpectedToken(t1, "sub")),
+    }
 }
 
 fn parse_jmp(toks : &mut Tokens) -> Result<Expr> {
