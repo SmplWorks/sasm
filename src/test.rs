@@ -59,4 +59,5 @@ case!(subc2r_word, "sub 0xF337, r1", Ok((vec![Instruction::subc2r(Value::word(0x
 case!(subr2r_byte, "sub rb0, rb1", Ok((vec![Instruction::subr2r(Register::rb0(), Register::rb1()).unwrap()], HashMap::new())));
 case!(subr2r_word, "sub r0, r1", Ok((vec![Instruction::subr2r(Register::r0(), Register::r1()).unwrap()], HashMap::new())));
 
+case!(ajmp, "ajmp r0", Ok((vec![Instruction::ajmp(Register::r0()).unwrap()], HashMap::new())));
 case!(jmp, "jmp r0", Ok((vec![Instruction::jmp(Register::r0()).unwrap()], HashMap::new())));

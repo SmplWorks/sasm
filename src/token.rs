@@ -19,6 +19,7 @@ pub enum Token {
     Add,
     Sub,
     Jmp,
+    AJmp,
 
     // Keywords
     Rel,
@@ -136,6 +137,7 @@ fn get_identifier(c : char, code : &mut Code) -> Token {
         "add" => Token::Add,
         "sub" => Token::Sub,
         "jmp" => Token::Jmp,
+        "ajmp" => Token::AJmp,
 
         // Keywords
         "rel" => Token::Rel,
