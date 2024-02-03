@@ -141,7 +141,7 @@ dependencies = [
 [[package]]
 name = "smpl_parser"
 version = "0.0.1"
-source = "git+https://github.com/SmplWorks/SmplParser.git?branch=main#b9f9d4b3f8cd96856d62e83a029461e50997f22c"
+source = "git+https://github.com/SmplWorks/SmplParser.git?branch=main#ca0f1426e8891069e3adbf09d6c0079f5cf757cb"
 
 [[package]]
 name = "strsim"
