@@ -7,13 +7,13 @@ fn parse_db_values(toks : &mut Tokens, ctx : &'static str) -> Result<Vec<i64>> {
     let mut values = Vec::new();
 
     loop {
-        let Some(t) = toks.next() else { return Err(Error::EOF("a number", ctx)) };
+        let Some(t) = toks.pop() else { return Err(Error::EOF("a number", ctx)) };
         match t {
             Token::Number(value) => values.push(value),
             _ => return Err(Error::UnexpectedToken(t, ctx)),
         };
 
-        let Some(t) = toks.next() else { break };
+        let Some(t) = toks.pop() else { break };
         match t {
             Token::Comma => (),
             _ => return Err(Error::UnexpectedToken(t, ctx)),
@@ -40,14 +40,14 @@ fn parse_dw(toks : &mut Tokens) -> Result<Expr> {
 }
 
 fn parse_comma(toks : &mut Tokens, ctx : &'static str) -> Result<(Token, Token)> {
-    let Some(t1) = toks.next() else { return Err(Error::EOF("value", ctx)) };
+    let Some(t1) = toks.pop() else { return Err(Error::EOF("value", ctx)) };
 
-    let Some(t2) = toks.next() else { return Err(Error::EOF("comma", ctx)) };
+    let Some(t2) = toks.pop() else { return Err(Error::EOF("comma", ctx)) };
     if t2 != Token::Comma {
         return Err(Error::UnexpectedToken(t2, "mov"))
     }
 
-    let Some(t3) = toks.next() else { return Err(Error::EOF("value", ctx)) };
+    let Some(t3) = toks.pop() else { return Err(Error::EOF("value", ctx)) };
     Ok((t1, t3))
 }
 
@@ -95,7 +95,7 @@ fn parse_movm2x(r1 : Register, t2 : Token) -> Result<Expr> {
 
 fn parse_mov(toks : &mut Tokens) -> Result<Expr> {
     let relative = if let Some(Token::Rel) = toks.peek() {
-        toks.next();
+        toks.pop();
         true
     } else { false };
 
@@ -163,13 +163,13 @@ fn parse_sub(toks : &mut Tokens) -> Result<Expr> {
 }
 
 fn parse_jmp(toks : &mut Tokens) -> Result<Expr> {
-    let Some(t) = toks.next() else { return Err(Error::EOF("value", "jmp")) };
+    let Some(t) = toks.pop() else { return Err(Error::EOF("value", "jmp")) };
     let Token::Register(reg) = t else { return Err(Error::UnexpectedToken(t, "jmp")) };
     Ok(Expr::Instruction(Instruction::jmp(reg).unwrap()))
 }
 
 fn parse_ajmp(toks : &mut Tokens) -> Result<Expr> {
-    let Some(t) = toks.next() else { return Err(Error::EOF("value", "ajmp")) };
+    let Some(t) = toks.pop() else { return Err(Error::EOF("value", "ajmp")) };
     let Token::Register(reg) = t else { return Err(Error::UnexpectedToken(t, "ajmp")) };
     Ok(Expr::Instruction(Instruction::ajmp(reg).unwrap()))
 }
@@ -195,8 +195,8 @@ fn parse_toks(t : Token, toks : &mut Tokens) -> Result<Expr> {
 fn parse_to_exprs(code : &str) -> Result<Vec<Expr>> {
     let mut res = Vec::new();
 
-    let mut toks = tokenize(code);
-    while let Some(t) = toks.next() {
+    let mut toks = tokenize(code)?;
+    while let Some(t) = toks.pop() {
         res.push(parse_toks(t, &mut toks)?)
     }
 

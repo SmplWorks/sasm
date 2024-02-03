@@ -1,6 +1,6 @@
 use crate::Token;
 
-#[derive(thiserror::Error, Debug, Clone, PartialEq, Eq)]
+#[derive(thiserror::Error, Debug, Clone, PartialEq)]
 pub enum Error {
     #[error("reached end of file while expecting {0} for {1}")]
     EOF(&'static str, &'static str),

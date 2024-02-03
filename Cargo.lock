@@ -126,16 +126,22 @@ version = "0.0.1"
 dependencies = [
  "clap",
  "smpl_core_common",
+ "smpl_parser",
  "thiserror",
 ]
 
 [[package]]
 name = "smpl_core_common"
 version = "0.0.1"
-source = "git+https://github.com/SmplWorks/SmplCore-common.git?branch=main#a5217271222f9964b4521198b7e8b8729e3f4ccb"
+source = "git+https://github.com/SmplWorks/SmplCore-common.git?branch=main#9fef9539890b6e389211971fe22847cff89e5d52"
 dependencies = [
  "thiserror",
 ]
+
+[[package]]
+name = "smpl_parser"
+version = "0.0.1"
+source = "git+https://github.com/SmplWorks/SmplParser.git?branch=main#b9f9d4b3f8cd96856d62e83a029461e50997f22c"
 
 [[package]]
 name = "strsim"
