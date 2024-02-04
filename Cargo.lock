@@ -122,7 +122,7 @@ dependencies = [
 
 [[package]]
 name = "sasm"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "clap",
  "smpl_core_common",
@@ -132,16 +132,16 @@ dependencies = [
 
 [[package]]
 name = "smpl_core_common"
-version = "0.0.1"
-source = "git+https://github.com/SmplWorks/SmplCore-common.git?branch=main#09bdfd261dae1642afbe5e7f13321451265b6888"
+version = "0.1.0"
+source = "git+https://github.com/SmplWorks/SmplCore-common.git?branch=main#4fa0ed92e22054fac1d9df3ed9778c339f3bb34d"
 dependencies = [
  "thiserror",
 ]
 
 [[package]]
 name = "smpl_parser"
-version = "0.0.1"
-source = "git+https://github.com/SmplWorks/SmplParser.git?branch=main#e96d893798f78c169c53136f9f01e341086077bf"
+version = "0.1.0"
+source = "git+https://github.com/SmplWorks/SmplParser.git?branch=main#dfa6f77e35be256f65e138412b66269aeecd4326"
 
 [[package]]
 name = "strsim"
