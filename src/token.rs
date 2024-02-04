@@ -1,3 +1,6 @@
+#[allow(unused_imports)] // Clippy is glitching!
+use std::str::FromStr;
+
 use smpl_core_common::Register;
 use smpl_parser::{Scanner, ScannerAction, Token as PToken};
 use crate::utils::{Error, Result};
@@ -29,10 +32,7 @@ pub enum Token {
 
 impl Token {
     pub fn is_comment(&self) -> bool {
-        match self {
-            Self::Comment(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::Comment(_))
     }
 }
 
@@ -56,8 +56,8 @@ fn convert_tokens(toks : Vec<PToken>) -> Result<Vec<Token>> {
 
             "rel" => ScannerAction::Return(Token::Rel),
 
-            _ if Register::from_str(&op).is_ok()
-                => ScannerAction::Return(Token::Register(Register::from_str(&op).unwrap())),
+            _ if Register::from_str(op).is_ok()
+                => ScannerAction::Return(Token::Register(Register::from_str(op).unwrap())),
             _ => ScannerAction::Request(Token::IdentifierRef(op.to_owned())),
         }
         [PToken::Ident(op), PToken::Punct(':')] => ScannerAction::Return(Token::IdentifierDef(op.to_owned())),
@@ -65,11 +65,11 @@ fn convert_tokens(toks : Vec<PToken>) -> Result<Vec<Token>> {
         [PToken::Punct('[')]
             => ScannerAction::Require,
         [PToken::Punct('['), PToken::Ident(reg)]
-            if Register::from_str(&reg).is_ok()
+            if Register::from_str(reg).is_ok()
             => ScannerAction::Require,
         [PToken::Punct('['), PToken::Ident(reg), PToken::Punct(']')]
-            if Register::from_str(&reg).is_ok()
-            => ScannerAction::Return(Token::Pointer(Register::from_str(&reg).unwrap())),
+            if Register::from_str(reg).is_ok()
+            => ScannerAction::Return(Token::Pointer(Register::from_str(reg).unwrap())),
 
         [PToken::Punct(',')] => ScannerAction::Return(Token::Comma),
 

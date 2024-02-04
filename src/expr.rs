@@ -29,18 +29,19 @@ impl Expr {
                         }
                     } else { ident_offset }
                 }),
-                dest.clone()
+                *dest
             )?]),
         }
     }
 
+    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> u16 {
         match self {
             Expr::Instruction(instruction) => instruction.len(),
             Expr::DB(values) => values.len().try_into().unwrap(),
             Expr::IdentifierDef(_) => 0,
             Self::MovC2R(_, dest, _) =>
-                Instruction::movc2r(Value::word(0), dest.clone()).unwrap().len(), // TODO: Don't unwrap
+                Instruction::movc2r(Value::word(0), *dest).unwrap().len(), // TODO: Don't unwrap
         }
     }
 }
