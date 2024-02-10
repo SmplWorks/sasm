@@ -51,6 +51,12 @@ fn parse_comma(toks : &mut Tokens, ctx : &'static str) -> Result<(Token, Token)>
     Ok((t1, t3))
 }
 
+fn parse_reg(toks : &mut Tokens, ctx : &'static str) -> Result<Register> {
+    let Some(t) = toks.pop() else { return Err(Error::EOF("value", ctx)) };
+    let Token::Register(r) = t else { return Err(Error::UnexpectedToken(t, ctx)) };
+    Ok(r)
+}
+
 /*
 fn parse_regs(toks : &mut Tokens, ctx : &'static str) -> Result<(Register, Register)> {
     let (t1, t2) = parse_comma(toks, "add")?;
@@ -182,9 +188,14 @@ fn parse_toks(t : Token, toks : &mut Tokens) -> Result<Expr> {
         Nop => Expr::Instruction(Instruction::Nop),
         DB => parse_db(toks)?,
         DW => parse_dw(toks)?,
+
         Mov => parse_mov(toks)?,
+        Push => Expr::Instruction(Instruction::Push(parse_reg(toks, "push")?)),
+        Pop => Expr::Instruction(Instruction::Pop(parse_reg(toks, "pop")?)),
+
         Add => parse_add(toks)?,
         Sub => parse_sub(toks)?,
+
         Jmp => parse_jmp(toks)?,
         AJmp => parse_ajmp(toks)?,
 
