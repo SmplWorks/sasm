@@ -51,156 +51,137 @@ fn parse_comma(toks : &mut Tokens, ctx : &'static str) -> Result<(Token, Token)>
     Ok((t1, t3))
 }
 
-fn parse_reg(toks : &mut Tokens, ctx : &'static str) -> Result<Register> {
-    let Some(t) = toks.pop() else { return Err(Error::EOF("value", ctx)) };
-    let Token::Register(r) = t else { return Err(Error::UnexpectedToken(t, ctx)) };
-    Ok(r)
+fn parse_zero(op : Token, _toks : &mut Tokens) -> Result<Expr> {
+    use Token::*;
+    Ok(Expr::Instruction(match op {
+        Nop => Instruction::Nop,
+
+        _ => return Err(Error::UnexpectedToken(op, "parse_zero")),
+    }))
 }
 
-/*
-fn parse_regs(toks : &mut Tokens, ctx : &'static str) -> Result<(Register, Register)> {
-    let (t1, t2) = parse_comma(toks, "add")?;
-    let Token::Register(r1) = t1 else { return Err(Error::UnexpectedToken(t1, ctx)) };
-    let Token::Register(r2) = t2 else { return Err(Error::UnexpectedToken(t2, ctx)) };
-    Ok((r1, r2))
+fn parse_one_r(op : Token, reg : Register, _toks : &mut Tokens) -> Result<Expr> {
+    use Token::*;
+    Ok(Expr::Instruction(match op {
+         Push => Instruction::Push(reg),
+         Pop => Instruction::Pop(reg),
+
+         AJmp => Instruction::AJmp(reg),
+         Jmp => Instruction::Jmp(reg),
+
+        _ => return Err(Error::UnexpectedToken(op, "parse_one_r")),
+    }))
 }
-*/
 
-fn parse_movi2r(ident : String, t2 : Token, relative : bool) -> Result<Expr> {
-    match t2 {
-        Token::Register(r2) => Ok(Expr::MovC2R(ident, r2, relative)),
+fn parse_one(op : Token, toks : &mut Tokens) -> Result<Expr> {
+    let Some(t) = toks.pop() else { return Err(Error::EOF("value", "parse_one")) };
 
-        _ => Err(Error::UnexpectedToken(t2, "mov")),
+    match t {
+        Token::Register(reg) => parse_one_r(op, reg, toks),
+
+        _ => Err(Error::UnexpectedToken(t, "parse_one")),
     }
 }
 
-fn parse_movc2r(value : i64, t2 : Token) -> Result<Expr> {
-    match t2 {
-        Token::Register(r2) => Ok(Expr::Instruction(Instruction::movc2r(Value::new(r2.width(), value as u16), r2)?)),
+fn parse_two_r2r(op : Token, r1 : Register, r2 : Register, _toks : &mut Tokens) -> Result<Expr> {
+    use Token::*;
+    Ok(Expr::Instruction(match op {
+        Mov => Instruction::movr2r(r1, r2)?,
 
-        _ => Err(Error::UnexpectedToken(t2, "mov")),
+        Add => Instruction::addr2r(r1, r2)?,
+        Sub => Instruction::subr2r(r1, r2)?,
+
+        _ => return Err(Error::UnexpectedToken(op, "parse_two_r2r")),
+    }))
+}
+
+fn parse_two_r2p(op : Token, r1 : Register, r2 : Register, _toks : &mut Tokens) -> Result<Expr> {
+    use Token::*;
+    Ok(Expr::Instruction(match op {
+        Mov => Instruction::movr2m(r1, r2)?,
+
+        _ => return Err(Error::UnexpectedToken(op, "parse_two_r2p")),
+    }))
+}
+
+fn parse_two_r(op : Token, r1 : Register, t2 : Token, toks : &mut Tokens) -> Result<Expr> {
+    match t2 {
+        Token::Register(r2) => parse_two_r2r(op, r1, r2, toks),
+        Token::Pointer(r2) => parse_two_r2p(op, r1, r2, toks),
+
+        _ => Err(Error::UnexpectedToken(t2, "parse_two_r")),
     }
 }
 
-fn parse_movr2x(r1 : Register, t2 : Token) -> Result<Expr> {
-    match t2 {
-        Token::Register(r2) => Ok(Expr::Instruction(Instruction::movr2r(r1, r2)?)),
-        Token::Pointer(r2) => Ok(Expr::Instruction(Instruction::movr2m(r1, r2)?)),
+fn parse_two_c2r(op : Token, value : Value, reg : Register, _toks : &mut Tokens) -> Result<Expr> {
+    use Token::*;
+    Ok(Expr::Instruction(match op {
+        Mov => Instruction::movc2r(value, reg)?,
 
-        _ => Err(Error::UnexpectedToken(t2, "mov")),
+        Add => Instruction::addc2r(value, reg)?,
+        Sub => Instruction::subc2r(value, reg)?,
+
+        _ => return Err(Error::UnexpectedToken(op, "parse_two_c2r")),
+    }))
+}
+
+fn parse_two_c(op : Token, v1 : i64, t2 : Token, toks : &mut Tokens) -> Result<Expr> {
+    match t2 {
+        Token::Register(reg) => parse_two_c2r(op, Value::new(reg.width(), v1 as u16), reg, toks),
+
+        _ => Err(Error::UnexpectedToken(t2, "parse_two_c")),
     }
 }
 
-fn parse_movm2x(r1 : Register, t2 : Token) -> Result<Expr> {
-    match t2 {
-        Token::Register(r2) => Ok(Expr::Instruction(Instruction::movm2r(r1, r2)?)),
+fn parse_two_p2r(op : Token, r1 : Register, r2 : Register, _toks : &mut Tokens) -> Result<Expr> {
+    use Token::*;
+    Ok(Expr::Instruction(match op {
+        Mov => Instruction::movm2r(r1, r2)?,
 
-        _ => Err(Error::UnexpectedToken(t2, "mov")),
+        _ => return Err(Error::UnexpectedToken(op, "parse_two_p2r")),
+    }))
+}
+
+fn parse_two_p(op : Token, r1 : Register, t2 : Token, toks : &mut Tokens) -> Result<Expr> {
+    match t2 {
+        Token::Register(r2) => parse_two_p2r(op, r1, r2, toks),
+
+        _ => Err(Error::UnexpectedToken(t2, "parse_two_p")),
     }
 }
 
-fn parse_mov(toks : &mut Tokens) -> Result<Expr> {
-    let relative = if let Some(Token::Rel) = toks.peek() {
-        toks.pop();
-        true
-    } else { false };
+fn parse_two(op : Token, toks : &mut Tokens) -> Result<Expr> {
+    let (t1, t2) = parse_comma(toks, "parse_two")?;
 
-    let (t1, t2) = parse_comma(toks, "mov")?;
     match t1 {
-        Token::IdentifierRef(ident) => parse_movi2r(ident, t2, relative),
-        Token::Number(value) => parse_movc2r(value, t2), // TODO: Accept relative
-        Token::Register(r1) => parse_movr2x(r1, t2), // TODO: Warn if relative
-        Token::Pointer(r1) => parse_movm2x(r1, t2), // TODO: Warn if relataive
+        Token::Register(r1) => parse_two_r(op, r1, t2, toks),
+        Token::Pointer(r1) => parse_two_p(op, r1, t2, toks),
+        Token::Number(v1) => parse_two_c(op, v1, t2, toks),
 
-        _ => Err(Error::UnexpectedToken(t1, "mov")),
+        _ => Err(Error::UnexpectedToken(t1, "parse_two")),
     }
-}
-
-fn parse_addc2r(value : i64, t2 : Token) -> Result<Expr> {
-    match t2 {
-        Token::Register(r2) => Ok(Expr::Instruction(Instruction::addc2r(Value::new(r2.width(), value as u16), r2)?)),
-
-        _ => Err(Error::UnexpectedToken(t2, "add")),
-    }
-}
-
-fn parse_addr2x(r1 : Register, t2 : Token) -> Result<Expr> {
-    match t2 {
-        Token::Register(r2) => Ok(Expr::Instruction(Instruction::addr2r(r1, r2)?)),
-
-        _ => Err(Error::UnexpectedToken(t2, "add")),
-    }
-}
-
-fn parse_add(toks : &mut Tokens) -> Result<Expr> {
-    let (t1, t2) = parse_comma(toks, "add")?;
-    match t1 {
-        Token::Number(value) => parse_addc2r(value, t2),
-        Token::Register(r1) => parse_addr2x(r1, t2),
-
-        _ => Err(Error::UnexpectedToken(t1, "add")),
-    }
-}
-
-fn parse_subc2r(value : i64, t2 : Token) -> Result<Expr> {
-    match t2 {
-        Token::Register(r2) => Ok(Expr::Instruction(Instruction::subc2r(Value::new(r2.width(), value as u16), r2)?)),
-
-        _ => Err(Error::UnexpectedToken(t2, "sub")),
-    }
-}
-
-fn parse_subr2x(r1 : Register, t2 : Token) -> Result<Expr> {
-    match t2 {
-        Token::Register(r2) => Ok(Expr::Instruction(Instruction::subr2r(r1, r2)?)),
-
-        _ => Err(Error::UnexpectedToken(t2, "sub")),
-    }
-}
-
-fn parse_sub(toks : &mut Tokens) -> Result<Expr> {
-    let (t1, t2) = parse_comma(toks, "sub")?;
-    match t1 {
-        Token::Number(value) => parse_subc2r(value, t2),
-        Token::Register(r1) => parse_subr2x(r1, t2), 
-
-        _ => Err(Error::UnexpectedToken(t1, "sub")),
-    }
-}
-
-fn parse_jmp(toks : &mut Tokens) -> Result<Expr> {
-    let Some(t) = toks.pop() else { return Err(Error::EOF("value", "jmp")) };
-    let Token::Register(reg) = t else { return Err(Error::UnexpectedToken(t, "jmp")) };
-    Ok(Expr::Instruction(Instruction::jmp(reg).unwrap()))
-}
-
-fn parse_ajmp(toks : &mut Tokens) -> Result<Expr> {
-    let Some(t) = toks.pop() else { return Err(Error::EOF("value", "ajmp")) };
-    let Token::Register(reg) = t else { return Err(Error::UnexpectedToken(t, "ajmp")) };
-    Ok(Expr::Instruction(Instruction::ajmp(reg).unwrap()))
 }
 
 fn parse_toks(t : Token, toks : &mut Tokens) -> Result<Expr> {
     use Token::*;
-    Ok(match t {
-        IdentifierDef(ident) => Expr::IdentifierDef(ident),
+    match t {
+        IdentifierDef(ident) => Ok(Expr::IdentifierDef(ident)),
+        DB => parse_db(toks),
+        DW => parse_dw(toks),
 
-        Nop => Expr::Instruction(Instruction::Nop),
-        DB => parse_db(toks)?,
-        DW => parse_dw(toks)?,
+        Nop
+            => parse_zero(t, toks),
 
-        Mov => parse_mov(toks)?,
-        Push => Expr::Instruction(Instruction::Push(parse_reg(toks, "push")?)),
-        Pop => Expr::Instruction(Instruction::Pop(parse_reg(toks, "pop")?)),
+        Push | Pop |
+        AJmp | Jmp
+            => parse_one(t, toks),
 
-        Add => parse_add(toks)?,
-        Sub => parse_sub(toks)?,
+        Mov |
+        Add | Sub
+            => parse_two(t, toks),
 
-        Jmp => parse_jmp(toks)?,
-        AJmp => parse_ajmp(toks)?,
-
-        _ => return Err(Error::UnexpectedToken(t, "parse_toks")),
-    })
+        _ => Err(Error::UnexpectedToken(t, "parse_toks")),
+    }
 }
 
 fn parse_to_exprs(code : &str) -> Result<Vec<Expr>> {
