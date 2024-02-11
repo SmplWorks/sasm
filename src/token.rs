@@ -51,9 +51,6 @@ pub enum Token {
     Int,
     Sti,
     Cli,
-
-    // Keywords
-    Rel,
 }
 
 impl Token {
@@ -105,8 +102,6 @@ fn convert_tokens(toks : Vec<PToken>) -> Result<Vec<Token>> {
             "int" => ScannerAction::Return(Token::Int),
             "sti" => ScannerAction::Return(Token::Sti),
             "cli" => ScannerAction::Return(Token::Cli),
-
-            "rel" => ScannerAction::Return(Token::Rel),
 
             _ if Register::from_str(op).is_ok()
                 => ScannerAction::Return(Token::Register(Register::from_str(op).unwrap())),
