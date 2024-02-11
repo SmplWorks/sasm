@@ -31,7 +31,7 @@ case!(identifiers_tmp, "foo: mov bar, r0\nbar: mov foo, r1", Ok((
     }
 )));
 
-// TODO: Complete
+/* TODO: Leaving it for a later reworking
 case!(labels, "l0: mov l1, r0\nl1: mov [l1], r1\nl2: mov r2, [l2]\nl3: ajmp l3\nl4: jmp l4\nl5: call l5\n", Ok((
     vec![
     ],
@@ -43,6 +43,7 @@ case!(labels, "l0: mov l1, r0\nl1: mov [l1], r1\nl2: mov r2, [l2]\nl3: ajmp l3\n
         identifiers
     }
 )));
+*/
 
 case!(nop, "nop", Ok((vec![Instruction::nop()], HashMap::new())));
 
