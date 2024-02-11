@@ -55,6 +55,8 @@ fn parse_zero(op : Token, _toks : &mut Tokens) -> Result<Expr> {
     use Token::*;
     Ok(Expr::Instruction(match op {
         Nop => Instruction::Nop,
+        Ret => Instruction::Ret,
+        Cli => Instruction::Cli,
 
         _ => return Err(Error::UnexpectedToken(op, "parse_zero")),
     }))
@@ -63,14 +65,37 @@ fn parse_zero(op : Token, _toks : &mut Tokens) -> Result<Expr> {
 fn parse_one_r(op : Token, reg : Register, _toks : &mut Tokens) -> Result<Expr> {
     use Token::*;
     Ok(Expr::Instruction(match op {
-         Push => Instruction::Push(reg),
-         Pop => Instruction::Pop(reg),
+        Push => Instruction::push(reg),
+        Pop => Instruction::pop(reg),
 
-         AJmp => Instruction::AJmp(reg),
-         Jmp => Instruction::Jmp(reg),
+        Not => Instruction::not(reg),
+
+        AJmp => Instruction::ajmp(reg),
+        Jmp => Instruction::jmp(reg),
+        Jeq => Instruction::jeq(reg),
+        Jneq => Instruction::jneq(reg),
+        Jlt => Instruction::jlt(reg),
+        Jgt => Instruction::jgt(reg),
+        Jleq => Instruction::jleq(reg),
+        Jgeq => Instruction::jgeq(reg),
+        Jo => Instruction::jo(reg),
+        Jno => Instruction::jno(reg),
+        Call => Instruction::callr(reg),
+
+        Int => Instruction::int(reg),
+        Sti => Instruction::sti(reg),
 
         _ => return Err(Error::UnexpectedToken(op, "parse_one_r")),
-    }))
+    }?))
+}
+
+fn parse_one_c(op : Token, value : i64, _toks : &mut Tokens) -> Result<Expr> {
+    use Token::*;
+    Ok(Expr::Instruction(match op {
+        Call => Instruction::callc(Value::from(value as u16)),
+
+        _ => return Err(Error::UnexpectedToken(op, "parse_one_c")),
+    }?))
 }
 
 fn parse_one(op : Token, toks : &mut Tokens) -> Result<Expr> {
@@ -78,6 +103,7 @@ fn parse_one(op : Token, toks : &mut Tokens) -> Result<Expr> {
 
     match t {
         Token::Register(reg) => parse_one_r(op, reg, toks),
+        Token::Number(value) => parse_one_c(op, value, toks),
 
         _ => Err(Error::UnexpectedToken(t, "parse_one")),
     }
@@ -86,13 +112,16 @@ fn parse_one(op : Token, toks : &mut Tokens) -> Result<Expr> {
 fn parse_two_r2r(op : Token, r1 : Register, r2 : Register, _toks : &mut Tokens) -> Result<Expr> {
     use Token::*;
     Ok(Expr::Instruction(match op {
-        Mov => Instruction::movr2r(r1, r2)?,
+        Mov => Instruction::movr2r(r1, r2),
 
-        Add => Instruction::addr2r(r1, r2)?,
-        Sub => Instruction::subr2r(r1, r2)?,
+        Add => Instruction::addr2r(r1, r2),
+        Sub => Instruction::subr2r(r1, r2),
+        And => Instruction::andr2r(r1, r2),
+        Or => Instruction::orr2r(r1, r2),
+        Cmp => Instruction::cmpr2r(r1, r2),
 
         _ => return Err(Error::UnexpectedToken(op, "parse_two_r2r")),
-    }))
+    }?))
 }
 
 fn parse_two_r2p(op : Token, r1 : Register, r2 : Register, _toks : &mut Tokens) -> Result<Expr> {
@@ -116,13 +145,19 @@ fn parse_two_r(op : Token, r1 : Register, t2 : Token, toks : &mut Tokens) -> Res
 fn parse_two_c2r(op : Token, value : Value, reg : Register, _toks : &mut Tokens) -> Result<Expr> {
     use Token::*;
     Ok(Expr::Instruction(match op {
-        Mov => Instruction::movc2r(value, reg)?,
+        Mov => Instruction::movc2r(value, reg),
 
-        Add => Instruction::addc2r(value, reg)?,
-        Sub => Instruction::subc2r(value, reg)?,
+        Add => Instruction::addc2r(value, reg),
+        Sub => Instruction::subc2r(value, reg),
+        And => Instruction::andc2r(value, reg),
+        Or => Instruction::orc2r(value, reg),
+        Cmp => Instruction::cmpc2r(value, reg),
+        Shl => Instruction::shl(value, reg),
+        Shr => Instruction::shr(value, reg),
+        Shre => Instruction::shre(value, reg),
 
         _ => return Err(Error::UnexpectedToken(op, "parse_two_c2r")),
-    }))
+    }?))
 }
 
 fn parse_two_c(op : Token, v1 : i64, t2 : Token, toks : &mut Tokens) -> Result<Expr> {
@@ -169,15 +204,17 @@ fn parse_toks(t : Token, toks : &mut Tokens) -> Result<Expr> {
         DB => parse_db(toks),
         DW => parse_dw(toks),
 
-        Nop
+        Nop | Ret | Cli
             => parse_zero(t, toks),
 
         Push | Pop |
-        AJmp | Jmp
+        Not |
+        AJmp | Jmp | Jeq | Jneq | Jlt | Jgt | Jleq | Jgeq | Jo | Jno | Call |
+        Int | Sti
             => parse_one(t, toks),
 
         Mov |
-        Add | Sub
+        Add | Sub | And | Or | Shl | Shr | Shre | Cmp
             => parse_two(t, toks),
 
         _ => Err(Error::UnexpectedToken(t, "parse_toks")),

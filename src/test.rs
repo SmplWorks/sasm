@@ -78,7 +78,7 @@ case!(orr2r_word, "or r0, r1", Ok((vec![Instruction::orr2r(Register::r0(), Regis
 #[test]
 fn shl() {
     for i in 1..=8 {
-        assert_eq!(parse(&format!("shl {i}, rb0")), Ok((vec![Instruction::shl(Value::word(i), Register::rb0()).unwrap()], HashMap::new())));
+        assert_eq!(parse(&format!("shl {i}, rb0")), Ok((vec![Instruction::shl(Value::byte(i), Register::rb0()).unwrap()], HashMap::new())));
     }
 
     for i in 1..=16 {
@@ -89,7 +89,7 @@ fn shl() {
 #[test]
 fn shr() {
     for i in 1..=8 {
-        assert_eq!(parse(&format!("shr {i}, rb0")), Ok((vec![Instruction::shr(Value::word(i), Register::rb0()).unwrap()], HashMap::new())));
+        assert_eq!(parse(&format!("shr {i}, rb0")), Ok((vec![Instruction::shr(Value::byte(i), Register::rb0()).unwrap()], HashMap::new())));
     }
 
     for i in 1..=16 {
@@ -100,7 +100,7 @@ fn shr() {
 #[test]
 fn shre() {
     for i in 1..=8 {
-        assert_eq!(parse(&format!("shre {i}, rb0")), Ok((vec![Instruction::shre(Value::word(i), Register::rb0()).unwrap()], HashMap::new())));
+        assert_eq!(parse(&format!("shre {i}, rb0")), Ok((vec![Instruction::shre(Value::byte(i), Register::rb0()).unwrap()], HashMap::new())));
     }
 
     for i in 1..=16 {
